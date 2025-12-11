@@ -1,0 +1,468 @@
+/* 组件样式 */
+
+/* 按钮组件 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--border-hover);
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+/* 选择框 */
+.select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+/* 输入框 */
+input[type="text"],
+input[type="number"] {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+/* 复选框和标签 */
+label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary-color);
+}
+
+/* 模态框 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-lg);
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+}
+
+.modal-close:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+.modal-body h4 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.modal-body ul,
+.modal-body ol {
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-lg);
+}
+
+.modal-body li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-secondary);
+}
+
+/* Diff 表格样式 */
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.875rem;
+}
+
+.diff-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  vertical-align: top;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.line-num-A,
+.line-num-B {
+  width: 40px;
+  background-color: var(--bg-tertiary);
+  text-align: right;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  user-select: none;
+  font-size: 0.75rem;
+}
+
+.line-content-A,
+.line-content-B {
+  width: 50%;
+  padding-left: var(--spacing-md);
+}
+
+.diff-removed {
+  background-color: var(--diff-del-bg);
+}
+
+.diff-added {
+  background-color: var(--diff-ins-bg);
+}
+
+del {
+  background-color: #fecaca;
+  border: 1px solid var(--diff-del-border);
+  text-decoration: none;
+  color: #7f1d1d;
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+}
+
+ins {
+  background-color: #bbf7d0;
+  border: 1px solid var(--diff-ins-border);
+  text-decoration: none;
+  color: #14532d;
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+}
+
+/* 功能词高亮 */
+.fw-AUX_MODAL_STRONG {
+  background-color: var(--fw-strong-bg);
+  border: 1px solid #fca5a5;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.fw-AUX_MODAL_WEAK {
+  background-color: var(--fw-weak-bg);
+  border: 1px solid #fdba74;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.fw-AUX_MODAL_PERMISSION {
+  background-color: var(--fw-permission-bg);
+  border: 1px solid #93c5fd;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.fw-ADV_HEDGING {
+  background-color: var(--fw-hedging-bg);
+  border: 1px solid #7dd3fc;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.fw-ADV_INTENSIFIER {
+  background-color: var(--fw-intensifier-bg);
+  border: 1px solid #c4b5fd;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+/* 词频表格 */
+.frequency-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.freq-options {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.frequency-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.freq-table-container h4 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.freq-table {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.freq-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.freq-item:last-child {
+  border-bottom: none;
+}
+
+.freq-word {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.freq-count {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.frequency-chart {
+  margin-top: var(--spacing-lg);
+}
+
+.frequency-chart h4 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 词典管理 */
+.dictionary-controls {
+  margin-bottom: var(--spacing-lg);
+}
+
+.add-word-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.add-word-form input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.dictionary-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.dictionary-view {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dict-category {
+  margin-bottom: var(--spacing-lg);
+}
+
+.dict-category h4 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dict-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.dict-word {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.dict-word-remove {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dict-word-remove:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .frequency-results {
+    grid-template-columns: 1fr;
+  }
+  
+  .frequency-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .freq-options {
+    justify-content: center;
+  }
+  
+  .add-word-form {
+    flex-direction: column;
+  }
+  
+  .add-word-form input {
+    min-width: auto;
+  }
+  
+  .dictionary-actions {
+    justify-content: center;
+  }
+}

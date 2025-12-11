@@ -1,0 +1,15 @@
+services:
+  doccano:
+    image: doccano/doccano
+    ports:
+      - "8000:8000"
+    environment:
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "admin"
+      ADMIN_EMAIL: "admin@example.com"
+    command: >
+      bash -c "
+        doccano migrate &&
+        doccano createsuperuser --noinput --username admin --email admin@example.com &&
+        doccano runserver 0.0.0.0:8000
+      "

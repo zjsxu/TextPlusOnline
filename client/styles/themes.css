@@ -1,0 +1,277 @@
+/* 主题系统 */
+
+/* 默认主题已在 main.css 中定义 */
+
+/* 高对比度主题 */
+[data-theme="high-contrast"] {
+  --primary-color: #0066cc;
+  --primary-hover: #0052a3;
+  --secondary-color: #333333;
+  --success-color: #008000;
+  --warning-color: #ff8c00;
+  --danger-color: #cc0000;
+  
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e0e0e0;
+  
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  
+  --border-color: #cccccc;
+  --border-hover: #999999;
+  
+  /* 功能词高亮 - 高对比度 */
+  --fw-strong-bg: #ffcccc;
+  --fw-weak-bg: #ffe6cc;
+  --fw-permission-bg: #ccddff;
+  --fw-hedging-bg: #cceeff;
+  --fw-intensifier-bg: #e6ccff;
+  
+  /* Diff 颜色 - 高对比度 */
+  --diff-del-bg: #ffdddd;
+  --diff-ins-bg: #ddffdd;
+  --diff-del-border: #ff6666;
+  --diff-ins-border: #66cc66;
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary-color: #6b7280;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  
+  --border-color: #374151;
+  --border-hover: #4b5563;
+  
+  /* 功能词高亮 - 暗色主题 */
+  --fw-strong-bg: #7f1d1d;
+  --fw-weak-bg: #92400e;
+  --fw-permission-bg: #1e3a8a;
+  --fw-hedging-bg: #0c4a6e;
+  --fw-intensifier-bg: #581c87;
+  
+  /* Diff 颜色 - 暗色主题 */
+  --diff-del-bg: #7f1d1d;
+  --diff-ins-bg: #14532d;
+  --diff-del-border: #dc2626;
+  --diff-ins-border: #16a34a;
+}
+
+/* 暗色主题下的特殊调整 */
+[data-theme="dark"] del {
+  background-color: #7f1d1d;
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] ins {
+  background-color: #14532d;
+  border-color: #16a34a;
+  color: #86efac;
+}
+
+[data-theme="dark"] .fw-AUX_MODAL_STRONG {
+  background-color: #7f1d1d;
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .fw-AUX_MODAL_WEAK {
+  background-color: #92400e;
+  border-color: #ea580c;
+  color: #fdba74;
+}
+
+[data-theme="dark"] .fw-AUX_MODAL_PERMISSION {
+  background-color: #1e3a8a;
+  border-color: #2563eb;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .fw-ADV_HEDGING {
+  background-color: #0c4a6e;
+  border-color: #0284c7;
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .fw-ADV_INTENSIFIER {
+  background-color: #581c87;
+  border-color: #7c3aed;
+  color: #c4b5fd;
+}
+
+/* 蓝色主题 */
+[data-theme="blue"] {
+  --primary-color: #1e40af;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #64748b;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  
+  --bg-primary: #f8fafc;
+  --bg-secondary: #e2e8f0;
+  --bg-tertiary: #cbd5e1;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  --border-color: #cbd5e1;
+  --border-hover: #94a3b8;
+}
+
+/* 绿色主题 */
+[data-theme="green"] {
+  --primary-color: #059669;
+  --primary-hover: #047857;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  
+  --bg-primary: #f0fdf4;
+  --bg-secondary: #dcfce7;
+  --bg-tertiary: #bbf7d0;
+  
+  --text-primary: #14532d;
+  --text-secondary: #166534;
+  --text-muted: #22c55e;
+  
+  --border-color: #bbf7d0;
+  --border-hover: #86efac;
+}
+
+/* 主题切换动画 */
+* {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* 主题切换按钮样式 */
+#themeToggle {
+  position: relative;
+  overflow: hidden;
+}
+
+#themeToggle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--primary-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+  z-index: -1;
+}
+
+#themeToggle:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Firefox 滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) var(--bg-tertiary);
+}
+
+/* 打印样式 */
+@media print {
+  .navbar,
+  .nav-actions,
+  .action-bar,
+  .results-controls,
+  .analysis-tabs,
+  .frequency-controls,
+  .dictionary-controls {
+    display: none !important;
+  }
+  
+  .main-container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .diff-container,
+  .analysis-card {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* 无障碍支持 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 高对比度媒体查询 */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #000000;
+    --text-muted: #333333;
+  }
+}
+
+/* 暗色模式媒体查询 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --border-hover: #4b5563;
+  }
+}

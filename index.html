@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextDiff+: 文本对比分析工具 | Text Comparison Toolkit</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="专业的文本对比分析工具，支持PDF、TXT、DOCX文件，提供语义分析、词频统计等功能">
+    <meta name="keywords" content="文本对比,语义分析,词频统计,PDF对比,学术工具">
+</head>
+<body>
+
+    <h1>文件与文本差异对比工具 | Text Comparison Tool (PDF/TXT/DOCX Supported)</h1>
+    
+    <div class="input-container">
+        <div>
+            <h2>文本 A（旧文本） | Text A (Old Version)</h2>
+            <label for="fileA">上传文件 A (PDF/TXT/DOCX) | Upload File A (PDF/TXT/DOCX):</label>
+            <input type="file" id="fileA" accept=".pdf, .txt, .docx" onchange="uploadFile('A')">
+            <textarea id="textA" placeholder="或在此粘贴旧文本 | Or paste Text A here..."></textarea>
+        </div>
+        
+        <div>
+            <h2>文本 B（新文本） | Text B (New Version)</h2>
+            <label for="fileB">上传文件 B (PDF/TXT/DOCX) | Upload File B (PDF/TXT/DOCX):</label>
+            <input type="file" id="fileB" accept=".pdf, .txt, .docx" onchange="uploadFile('B')">
+            <textarea id="textB" placeholder="或在此粘贴新文本 | Or paste Text B here..."></textarea>
+        </div>
+    </div>
+
+    <button onclick="compareTexts()">执行对比 | Run Comparison</button>
+
+    <h2>对比结果 | Comparison Result</h2>
+    <div id="diffOutput">
+        <p>点击"执行对比"查看差异，或上传文件开始解析。 | Click "Run Comparison" to see differences, or upload files to begin extraction.</p>
+    </div>
+    
+    <!-- 语义分析面板 -->
+    <h2>语义层级分析（Tone Index） | Semantic Tone Analysis (Tone Index)</h2>
+    <div id="semanticAnalysisPanel" style="
+        white-space: pre-wrap;
+        background: #fafafa;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-top: 15px;
+    "></div>
+
+    <!-- 引入外部库 -->
+    <script src="https://cdn.jsdelivr.net/gh/google/diff-match-patch@master/javascript/diff_match_patch.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    
+    <!-- 颜色设置面板 -->
+    <div id="colorSettingsPanel" style="margin-top:40px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+        <h2>🎨 自定义颜色与主题设置 | Custom Color & Theme Settings</h2>
+
+        <!-- 主题切换按钮 -->
+        <div style="margin-bottom: 15px;">
+            <button onclick="applyTheme('default')">默认主题 | Default Theme</button>
+            <button onclick="applyTheme('highContrast')">高对比主题 | High Contrast Theme</button>
+            <button onclick="applyTheme('custom')">自定义颜色 | Custom Colors</button>
+        </div>
+
+        <!-- 自定义颜色区域 -->
+        <div id="customColorSection" style="display:none; margin-top:20px;">
+            <h3>功能词高亮颜色 | Function Word Highlight Colors</h3>
+
+            <label>强制性情态词 | Strong Modals:</label>
+            <input type="color" id="colorStrong" onchange="updateCustomColor('--fw-strong-bg', this.value)">
+            <br><br>
+
+            <label>弱情态词 | Weak Modals:</label>
+            <input type="color" id="colorWeak" onchange="updateCustomColor('--fw-weak-bg', this.value)">
+            <br><br>
+
+            <label>许可性情态词 | Permission Modals:</label>
+            <input type="color" id="colorPermission" onchange="updateCustomColor('--fw-permission-bg', this.value)">
+            <br><br>
+
+            <label>模糊副词 | Hedging Adverbs:</label>
+            <input type="color" id="colorHedging" onchange="updateCustomColor('--fw-hedging-bg', this.value)">
+            <br><br>
+
+            <label>加强副词 | Intensifiers:</label>
+            <input type="color" id="colorIntensifier" onchange="updateCustomColor('--fw-intensifier-bg', this.value)">
+            <br><br>
+
+            <h3>Diff 区域颜色 | Diff Area Colors</h3>
+
+            <label>删除文本（del） | Deleted Text (del):</label>
+            <input type="color" id="colorDel" onchange="updateCustomColor('--diff-del-bg', this.value)">
+            <br><br>
+
+            <label>新增文本（ins） | Inserted Text (ins):</label>
+            <input type="color" id="colorIns" onchange="updateCustomColor('--diff-ins-bg', this.value)">
+            <br><br>
+
+            <button onclick="resetCustomColors()">恢复默认值 | Reset to Default</button>
+        </div>
+    </div>
+
+    <!-- 图表侧栏（右侧浮动） -->
+    <div id="chartSidebar" style="
+        position: fixed;
+        top: 100px;
+        right: 0;
+        width: 360px;
+        height: calc(100% - 120px);
+        overflow-y: auto;
+        padding: 15px;
+        background: #ffffff;
+        border-left: 2px solid #ddd;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+        z-index: 999;
+    ">
+        <h2 style="margin-top:0;">📊 可视化分析 | Visualization Panel</h2>
+
+        <div class="chartCard" style="margin-bottom:25px;">
+            <h3>功能词变化（B - A） | Function Word Change (B - A)</h3>
+            <canvas id="chartChange"></canvas>
+        </div>
+
+        <div class="chartCard" style="margin-bottom:25px;">
+            <h3>A vs B 功能词对比 | A vs B Function Word Comparison</h3>
+            <canvas id="chartCompare"></canvas>
+        </div>
+
+        <div class="chartCard" style="margin-bottom:25px;">
+            <h3>语气雷达图（Tone Profile） | Tone Profile Radar Chart</h3>
+            <canvas id="chartRadar"></canvas>
+        </div>
+    </div>
+
+    <!-- 功能词标注与管理 -->
+    <section id="fwAnnotationPanel" style="margin-top:40px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+        <h2>✏️ 功能词词典标注与管理 | Function Word Dictionary Annotation & Management</h2>
+        <p>在此可添加或调整功能词，系统会自动用于高亮与语气分析。<br>
+           You may add or modify function words here. They will be used immediately for highlighting and analysis.</p>
+
+        <div style="margin-top:15px;">
+            <label for="fwPhraseInput">功能词/短语 | Function Word or Phrase:</label><br>
+            <input type="text" id="fwPhraseInput" 
+                   placeholder="例如：必须 / 应当 / should / might..."
+                   style="width:280px; padding:6px; margin-top:5px;">
+        </div>
+
+        <div style="margin-top:15px;">
+            <label for="fwCategorySelect">类别 | Category:</label><br>
+            <select id="fwCategorySelect" style="padding:6px; margin-top:5px;">
+                <option value="AUX_MODAL_STRONG">强制性情态词 | Strong Modal (must / 必须)</option>
+                <option value="AUX_MODAL_WEAK">弱情态词 | Weak Modal (should / 应当)</option>
+                <option value="AUX_MODAL_PERMISSION">许可性情态词 | Permission Modal (may / 可以)</option>
+                <option value="ADV_HEDGING">模糊副词 | Hedging Adverb (likely / 可能)</option>
+                <option value="ADV_INTENSIFIER">加强副词 | Intensifier (very / 非常)</option>
+            </select>
+        </div>
+
+        <div style="margin-top:20px;">
+            <button onclick="addFunctionWord()">添加到词典 | Add to Dictionary</button>
+            <button onclick="renderFunctionWordDict()">刷新词典显示 | Refresh Dictionary View</button>
+            <button onclick="exportFunctionWordDict()">导出词典 | Export Dictionary</button>
+
+            <label style="margin-left:10px;">
+                导入词典 | Import Dictionary:
+                <input type="file" accept=".json" onchange="importFunctionWordDict(this)">
+            </label>
+            <label style="margin-left:10px;">
+                导入 doccano JSONL:
+                <input type="file" accept=".jsonl" onchange="importDoccanoJSONL(this)">
+            </label>
+            <button onclick="resetToDefaultDict()">恢复默认词典 | Reset to Default Dictionary</button>
+        </div>
+
+        <!-- 自定义标注类别 -->
+        <h3 style="margin-top:30px;">🆕 添加自定义标注类别 | Add Custom Annotation Category</h3>
+
+        <div style="margin-top:10px;">
+            <label>类别显示名称 | Display Name:</label><br>
+            <input type="text" id="customLabelName" 
+                   placeholder="例如：国家名 / Country Name"
+                   style="width:260px; padding:6px; margin-top:5px;">
+        </div>
+
+        <div style="margin-top:10px;">
+            <label>类别编码（系统内部使用）| Category Code (System Key):</label><br>
+            <input type="text" id="customLabelCode" 
+                   placeholder="例如：CUSTOM_COUNTRY"
+                   style="width:260px; padding:6px; margin-top:5px;">
+        </div>
+
+        <div style="margin-top:10px;">
+            <label>高亮颜色 | Highlight Color:</label><br>
+            <input type="color" id="customLabelColor" 
+                   value="#ffe599"
+                   style="width:120px; height:32px; margin-top:5px;">
+        </div>
+
+        <button onclick="addCustomCategory()" style="margin-top:15px;">
+            添加类别 | Add Category
+        </button>
+
+        <div id="customCategoryList"
+             style="margin-top:15px; border:1px solid #aaa; padding:10px; max-height:180px; overflow-y:auto;">
+            <p>尚无自定义类别。| No custom categories yet.</p>
+        </div>
+
+        <div id="fwDictView"
+             style="margin-top:20px; border:1px solid #aaa; padding:10px; max-height:250px; overflow-y:auto;">
+            <p>词典未加载或为空。| Dictionary not loaded or empty.</p>
+        </div>
+    </section>
+
+    <!-- 浮动标注菜单 -->
+    <div id="selectionMenu"
+         style="position:absolute; display:none; z-index:9999;
+                padding:8px; background:white; border:1px solid #ccc;
+                border-radius:6px; 
+                box-shadow:0 2px 6px rgba(0,0,0,0.2);
+                pointer-events:auto;">
+        <p style="margin:0 0 6px 0; font-size:14px;">选择类别 | Pick Category</p>
+        <button onclick="applySelectionLabel('AUX_MODAL_STRONG')">强制性 | Strong</button>
+        <button onclick="applySelectionLabel('AUX_MODAL_WEAK')">弱 | Weak</button>
+        <button onclick="applySelectionLabel('AUX_MODAL_PERMISSION')">许可 | Permission</button>
+        <button onclick="applySelectionLabel('ADV_HEDGING')">模糊 | Hedging</button>
+        <button onclick="applySelectionLabel('ADV_INTENSIFIER')">加强 | Intensifier</button>
+        <button onclick="hideSelectionMenu()">取消 | Cancel</button>
+    </div>
+
+    <!-- 词频统计面板 -->
+    <section id="freqPanel" style="margin-top:40px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+        <h2>🔍 词频统计 | Word Frequency Analysis</h2>
+        <p>显示文本 A 与文本 B 中出现次数最高的词语（中英文自动分词）。</p>
+
+        <button onclick="runFrequencyAnalysis()">运行词频分析 | Run Frequency Analysis</button>
+
+        <div style="display:flex; gap:20px; margin-top:20px;">
+            <div style="flex:1;">
+                <h3>文本 A 高频词 | Top Words in Text A</h3>
+                <div id="freqTableA" 
+                     style="margin-top:10px; border:1px solid #aaa; padding:10px; min-height:200px;">
+                </div>
+            </div>
+
+            <div style="flex:1;">
+                <h3>文本 B 高频词 | Top Words in Text B</h3>
+                <div id="freqTableB" 
+                     style="margin-top:10px; border:1px solid #aaa; padding:10px; min-height:200px;">
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:20px;">词频差异图 | Frequency Difference Chart</h3>
+        <canvas id="freqChart" style="max-width:500px;"></canvas>
+    </section>
+
+    <!-- 应用脚本 -->
+    <script src="js/theme.js"></script>
+    <script src="js/diff_core.js"></script>
+    <script src="js/tone_analysis.js"></script>
+    <script src="js/dict_manager.js"></script>
+    <script src="js/annotator.js"></script>
+    <script src="js/frequency.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

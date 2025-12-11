@@ -1,0 +1,56 @@
+{
+    "must": "AUX_MODAL_STRONG",
+    "shall": "AUX_MODAL_STRONG",
+    "have to": "AUX_MODAL_STRONG",
+    "need to": "AUX_MODAL_STRONG",
+    "required to": "AUX_MODAL_STRONG",
+
+    "should": "AUX_MODAL_WEAK",
+    "ought to": "AUX_MODAL_WEAK",
+    "expected to": "AUX_MODAL_WEAK",
+
+    "may": "AUX_MODAL_PERMISSION",
+    "can": "AUX_MODAL_PERMISSION",
+    "could": "AUX_MODAL_PERMISSION",
+    "allowed to": "AUX_MODAL_PERMISSION",
+    "permitted to": "AUX_MODAL_PERMISSION",
+
+    "likely": "ADV_HEDGING",
+    "possibly": "ADV_HEDGING",
+    "probably": "ADV_HEDGING",
+    "potentially": "ADV_HEDGING",
+    "might": "ADV_HEDGING",
+
+    "very": "ADV_INTENSIFIER",
+    "highly": "ADV_INTENSIFIER",
+    "extremely": "ADV_INTENSIFIER",
+    "significantly": "ADV_INTENSIFIER",
+
+    "必须": "AUX_MODAL_STRONG",
+    "应当": "AUX_MODAL_STRONG",
+    "务必": "AUX_MODAL_STRONG",
+    "必须要": "AUX_MODAL_STRONG",
+
+    "应该": "AUX_MODAL_WEAK",
+    "应": "AUX_MODAL_WEAK",
+    "宜": "AUX_MODAL_WEAK",
+
+    "可以": "AUX_MODAL_PERMISSION",
+    "能够": "AUX_MODAL_PERMISSION",
+    "可": "AUX_MODAL_PERMISSION",
+    "允许": "AUX_MODAL_PERMISSION",
+
+    "可能": "ADV_HEDGING",
+    "或许": "ADV_HEDGING",
+    "大概": "ADV_HEDGING",
+    "基本上": "ADV_HEDGING",
+
+    "非常": "ADV_INTENSIFIER",
+    "极其": "ADV_INTENSIFIER",
+    "显著": "ADV_INTENSIFIER",
+    "特别": "ADV_INTENSIFIER",
+
+    "不得": "AUX_MODAL_STRONG",
+    "不应": "AUX_MODAL_WEAK",
+    "不可以": "AUX_MODAL_PERMISSION"
+}
