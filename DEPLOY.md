@@ -59,7 +59,7 @@ git push origin main
 5. 点击保存
 
 ### 3. 访问网址
-`https://yourusername.github.io/your-repo-name`
+`https://zjsxu.github.io/TextPlusOnline/`
 
 ## ✅ 部署后检查
 

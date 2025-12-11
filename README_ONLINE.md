@@ -17,7 +17,7 @@ TextDiff+ 是一个专业的文本对比分析工具，现已支持在线使用�
 
 ### 🚀 在线使用
 
-**直接访问**: [在线版本链接]
+**直接访问**: https://zjsxu.github.io/TextPlusOnline/
 
 ### 📱 使用步骤
 
