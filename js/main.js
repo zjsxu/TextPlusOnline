@@ -18,21 +18,15 @@ function mergeCustomWordsIntoDict() {
     }
 }
 
-/* 加载后端词典 */
+/* 加载词典（纯前端版本） */
 function loadFunctionWordDict() {
-    return fetch("/api/dictionary")
-        .then(r => r.json())
-        .then(data => {
-            FUNCTION_WORD_DICT = data;
-            mergeCustomWordsIntoDict();
-            console.log("词典已加载：", FUNCTION_WORD_DICT);
-        })
-        .catch(err => {
-            console.error("词典加载失败:", err);
-            // 使用默认词典
-            FUNCTION_WORD_DICT = getDefaultDictionary();
-            mergeCustomWordsIntoDict();
-        });
+    return new Promise((resolve) => {
+        // 使用默认词典
+        FUNCTION_WORD_DICT = getDefaultDictionary();
+        mergeCustomWordsIntoDict();
+        console.log("词典已加载：", FUNCTION_WORD_DICT);
+        resolve();
+    });
 }
 
 /* 默认词典 */
@@ -115,7 +109,7 @@ function getDefaultDictionary() {
 }
 
 /* =========================================
-   文件上传 + 文本提取（调用后端 /extract-text）
+   文件上传 + 文本提取（纯前端版本）
    ========================================= */
 function uploadFile(target) {
     const fileInput = document.getElementById(`file${target}`);
@@ -124,32 +118,89 @@ function uploadFile(target) {
     
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 统计文件上传
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackFileUpload(file.type || 'unknown', file.size);
+    }
     
-    textarea.value = `正在上传并提取文件 [${file.name}] 中的文本，请稍候...`;
+    textarea.value = `正在提取文件 [${file.name}] 中的文本，请稍候...`;
 
-    fetch('/api/extract-text', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`服务器响应失败，状态码: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            textarea.value = `提取失败: ${data.error}`;
-        } else {
-            textarea.value = data.text;
-        }
-    })
-    .catch(error => {
-        console.error('上传或连接错误:', error);
-        textarea.value = `连接服务器失败，请确保后端程序已运行。错误: ${error.message}`;
-    });
+    // 根据文件类型处理
+    if (file.type === 'application/pdf') {
+        extractPDFText(file, target);
+    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        extractDocxText(file, target);
+    } else if (file.type === 'text/plain') {
+        extractTxtText(file, target);
+    } else {
+        textarea.value = `不支持的文件类型: ${file.type}。请上传 PDF、TXT 或 DOCX 文件。`;
+    }
+}
+
+/* PDF文本提取 */
+function extractPDFText(file, target) {
+    const textarea = document.getElementById(`text${target}`);
+    
+    const fileReader = new FileReader();
+    fileReader.onload = function() {
+        const typedarray = new Uint8Array(this.result);
+        
+        pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+            let textContent = '';
+            const numPages = pdf.numPages;
+            let pagesProcessed = 0;
+            
+            for (let i = 1; i <= numPages; i++) {
+                pdf.getPage(i).then(function(page) {
+                    page.getTextContent().then(function(content) {
+                        const pageText = content.items.map(item => item.str).join(' ');
+                        textContent += pageText + '\n';
+                        pagesProcessed++;
+                        
+                        if (pagesProcessed === numPages) {
+                            textarea.value = textContent.trim();
+                        }
+                    });
+                });
+            }
+        }).catch(function(error) {
+            console.error('PDF解析错误:', error);
+            textarea.value = `PDF文件解析失败: ${error.message}`;
+        });
+    };
+    
+    fileReader.readAsArrayBuffer(file);
+}
+
+/* DOCX文本提取 */
+function extractDocxText(file, target) {
+    const textarea = document.getElementById(`text${target}`);
+    
+    const fileReader = new FileReader();
+    fileReader.onload = function() {
+        mammoth.extractRawText({arrayBuffer: this.result})
+            .then(function(result) {
+                textarea.value = result.value;
+            })
+            .catch(function(error) {
+                console.error('DOCX解析错误:', error);
+                textarea.value = `DOCX文件解析失败: ${error.message}`;
+            });
+    };
+    
+    fileReader.readAsArrayBuffer(file);
+}
+
+/* TXT文本提取 */
+function extractTxtText(file, target) {
+    const textarea = document.getElementById(`text${target}`);
+    
+    const fileReader = new FileReader();
+    fileReader.onload = function() {
+        textarea.value = this.result;
+    };
+    
+    fileReader.readAsText(file, 'UTF-8');
 }
 
 /* 页面初始动作 */

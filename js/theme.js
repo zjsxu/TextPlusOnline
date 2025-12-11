@@ -28,6 +28,11 @@ const HIGH_CONTRAST_THEME = {
 function applyTheme(themeName) {
     const customSection = document.getElementById('customColorSection');
 
+    // 统计主题切换
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackThemeChange(themeName);
+    }
+
     if (themeName === 'default') {
         for (const key in DEFAULT_THEME) {
             document.documentElement.style.setProperty(key, DEFAULT_THEME[key]);

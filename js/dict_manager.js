@@ -94,6 +94,11 @@ function addFunctionWord() {
     CUSTOM_WORD_MAP[key] = category;
     saveCustomWordMap();
 
+    // 统计词典使用
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackDictionaryUsage('add_word', Object.keys(FUNCTION_WORD_DICT).length);
+    }
+
     document.getElementById("fwPhraseInput").value = "";
     renderFunctionWordDict();
     if (typeof compareTexts === "function") {
@@ -118,6 +123,11 @@ function deleteFunctionWord(word) {
    导出 JSON 词典
    ==================================================== */
 function exportFunctionWordDict() {
+    // 统计词典导出
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackDictionaryUsage('export', Object.keys(FUNCTION_WORD_DICT).length);
+    }
+
     const blob = new Blob(
         [JSON.stringify(FUNCTION_WORD_DICT, null, 2)],
         { type: "application/json" }
@@ -144,6 +154,12 @@ function importFunctionWordDict(fileInput) {
             const importedDict = JSON.parse(e.target.result);
             FUNCTION_WORD_DICT = { ...FUNCTION_WORD_DICT, ...importedDict };
             mergeCustomWordsIntoDict();
+            
+            // 统计词典导入
+            if (window.textDiffAnalytics) {
+                window.textDiffAnalytics.trackDictionaryUsage('import', Object.keys(importedDict).length);
+            }
+            
             renderFunctionWordDict();
             if (typeof compareTexts === "function") {
                 compareTexts();

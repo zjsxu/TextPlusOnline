@@ -64,6 +64,11 @@ function runFrequencyAnalysis() {
     const freqA = countFreq(tokensA);
     const freqB = countFreq(tokensB);
 
+    // 统计词频分析
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackFrequencyAnalysis(tokensA.length, tokensB.length);
+    }
+
     renderFreqTable("freqTableA", freqA);
     renderFreqTable("freqTableB", freqB);
 

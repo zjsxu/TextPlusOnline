@@ -255,7 +255,25 @@
         <canvas id="freqChart" style="max-width:500px;"></canvas>
     </section>
 
+    <!-- 网站使用统计面板 -->
+    <section id="analyticsPanel" style="margin-top:40px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+        <h2>📊 网站使用统计 | Website Usage Analytics</h2>
+        <p>查看本地使用统计数据（数据仅存储在您的浏览器中，不会上传到服务器）。</p>
+
+        <div style="margin-top:15px;">
+            <button onclick="showAnalyticsSummary()">显示统计摘要 | Show Analytics Summary</button>
+            <button onclick="exportAnalyticsData()">导出统计数据 | Export Analytics Data</button>
+            <button onclick="clearAnalyticsData()">清除统计数据 | Clear Analytics Data</button>
+        </div>
+
+        <div id="analyticsSummary" style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:6px; display:none;">
+            <h3>统计摘要 | Analytics Summary</h3>
+            <div id="analyticsContent"></div>
+        </div>
+    </section>
+
     <!-- 应用脚本 -->
+    <script src="js/analytics.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/diff_core.js"></script>
     <script src="js/tone_analysis.js"></script>

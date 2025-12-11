@@ -139,6 +139,12 @@ function compareTexts() {
     const diffs = dmp.diff_main(textA, textB);
     dmp.diff_cleanupSemantic(diffs);
 
+    // 统计对比信息
+    const diffCount = diffs.filter(diff => diff[0] !== 0).length;
+    if (window.textDiffAnalytics) {
+        window.textDiffAnalytics.trackTextComparison(textA.length, textB.length, diffCount);
+    }
+
     const htmlOutput = diff_prettySideBySide(diffs);
     outputDiv.innerHTML = `<div class="side-by-side-container">${htmlOutput}</div>`;
 
