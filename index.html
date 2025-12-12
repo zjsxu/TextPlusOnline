@@ -265,6 +265,14 @@
             <button onclick="exportAnalyticsData()">导出统计数据 | Export Analytics Data</button>
             <button onclick="clearAnalyticsData()">清除统计数据 | Clear Analytics Data</button>
         </div>
+        
+        <!-- 管理员工具 (仅开发环境显示) -->
+        <div id="adminTools" style="margin-top:10px; display:none;">
+            <p style="color:#666; font-size:0.9em;">🔧 系统管理员工具 (开发环境)</p>
+            <button onclick="openAdminDashboard()" style="background:#6f42c1; color:white;">📊 管理面板 | Admin Dashboard</button>
+            <button onclick="configureAnalyticsSystem()" style="background:#007bff; color:white;">⚙️ 系统配置 | System Config</button>
+            <button onclick="testBackendConnection()" style="background:#28a745; color:white;">🔗 测试连接 | Test Connection</button>
+        </div>
 
         <div id="analyticsSummary" style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:6px; display:none;">
             <h3>统计摘要 | Analytics Summary</h3>
@@ -273,6 +281,7 @@
     </section>
 
     <!-- 应用脚本 -->
+    <script src="analytics-config.js"></script>
     <script src="js/analytics.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/diff_core.js"></script>

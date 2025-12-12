@@ -8,6 +8,8 @@ class TextDiffAnalytics {
         this.sessionId = this.generateSessionId();
         this.startTime = Date.now();
         this.events = [];
+        this.batchTimer = null;
+        this.batchInterval = 30000; // 30秒批量发送一次
         
         // 初始化统计
         this.init();
@@ -23,12 +25,25 @@ class TextDiffAnalytics {
         // 监听页面关闭事件
         window.addEventListener('beforeunload', () => {
             this.trackSessionEnd();
+            this.sendBatchToBackend(); // 页面关闭前发送剩余数据
         });
 
         // 监听用户活动
         this.setupActivityTracking();
         
+        // 监听页面可见性变化
+        this.setupVisibilityTracking();
+        
+        // 启动批量发送定时器
+        this.startBatchTimer();
+        
+        // 显示管理员工具 (仅开发环境)
+        this.showAdminToolsIfDev();
+        
         console.log('📊 TextDiff+ Analytics initialized');
+        console.log('📊 Session ID:', this.sessionId);
+        console.log('📊 Backend URL:', this.getBackendUrl());
+        console.log('📊 Batch interval:', this.batchInterval);
     }
 
     /**
@@ -163,6 +178,27 @@ class TextDiffAnalytics {
     }
 
     /**
+     * 设置页面可见性跟踪
+     */
+    setupVisibilityTracking() {
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // 页面变为可见时，发送心跳
+                this.trackFeatureUsage('user_activity', {
+                    type: 'page_visible'
+                });
+                console.log('📊 Page became visible, sending heartbeat');
+            } else {
+                // 页面变为隐藏时
+                this.trackFeatureUsage('user_activity', {
+                    type: 'page_hidden'
+                });
+                console.log('📊 Page became hidden');
+            }
+        });
+    }
+
+    /**
      * 获取文件大小分类
      */
     getFileSizeCategory(size) {
@@ -189,26 +225,198 @@ class TextDiffAnalytics {
     async sendEvent(data) {
         this.events.push(data);
         
-        // 方案1: 发送到免费统计服务 (可选)
+        // 立即发送重要事件到后台
+        const backendUrl = this.getBackendUrl();
+        console.log('📊 Analytics sendEvent:', {
+            event: data.event,
+            backendUrl: backendUrl,
+            sessionId: data.sessionId
+        });
+        
+        if (backendUrl && (data.event === 'page_view' || data.event === 'feature_usage')) {
+            try {
+                await this.sendToBackend(data, backendUrl);
+                data.sent = true; // 标记为已发送
+                console.log('✅ Immediate send successful');
+            } catch (error) {
+                console.log('❌ Immediate send failed:', error.message);
+                console.log('📦 Will retry in batch');
+            }
+        } else if (!backendUrl) {
+            console.log('ℹ️ No backend URL, using local storage only');
+        }
+
+        // 本地存储统计数据 (作为备份)
+        this.saveToLocalStorage(data);
+    }
+
+    /**
+     * 获取后台服务URL
+     */
+    getBackendUrl() {
+        // 自动检测环境并配置后台URL
+        const hostname = window.location.hostname;
+        
+        // 本地开发环境
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3001/api/analytics';
+        }
+        
+        // GitHub Pages 生产环境
+        if (hostname === 'zjsxu.github.io') {
+            // 生产环境暂时使用本地存储模式，等待后台服务部署
+            return null; // 仅使用本地存储，不发送到后台
+        }
+        
+        // 其他环境暂不支持后台分析
+        return null;
+    }
+
+    /**
+     * 发送数据到后台服务
+     */
+    async sendToBackend(data, backendUrl) {
+        const endpoint = this.getEventEndpoint(data.event);
+        const url = `${backendUrl}${endpoint}`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(this.formatEventForBackend(data))
+        });
+
+        if (!response.ok) {
+            throw new Error(`Backend request failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('📊 Analytics sent to backend:', result);
+        return result;
+    }
+
+    /**
+     * 获取事件对应的API端点
+     */
+    getEventEndpoint(eventType) {
+        switch (eventType) {
+            case 'page_view':
+                return '/events/page-view';
+            case 'feature_usage':
+                return '/events/feature-usage';
+            case 'session_end':
+                return '/events/session';
+            default:
+                return '/events/page-view'; // 默认端点
+        }
+    }
+
+    /**
+     * 格式化事件数据以适配后台API
+     */
+    formatEventForBackend(data) {
+        switch (data.event) {
+            case 'page_view':
+                return {
+                    sessionId: data.sessionId,
+                    url: data.url,
+                    referrer: data.referrer || '',
+                    userAgent: data.userAgent,
+                    screenResolution: data.screenResolution,
+                    language: data.language,
+                    timestamp: data.timestamp
+                };
+            
+            case 'feature_usage':
+                return {
+                    sessionId: data.sessionId,
+                    feature: data.feature,
+                    action: data.details?.action || 'use',
+                    parameters: data.details || {},
+                    duration: data.details?.duration || 0,
+                    timestamp: data.timestamp
+                };
+            
+            case 'session_end':
+                return {
+                    sessionId: data.sessionId,
+                    eventType: 'end',
+                    data: {
+                        sessionDuration: data.sessionDuration,
+                        eventsCount: data.eventsCount
+                    },
+                    timestamp: data.timestamp
+                };
+            
+            default:
+                return data;
+        }
+    }
+
+    /**
+     * 批量发送事件到后台
+     */
+    async sendBatchToBackend() {
         try {
-            // 使用 httpbin.org 作为示例端点 (实际使用时替换为真实的统计服务)
-            await fetch('https://httpbin.org/post', {
+            const backendUrl = this.getBackendUrl();
+            console.log('📦 Batch send attempt:', {
+                backendUrl: backendUrl,
+                totalEvents: this.events.length
+            });
+            
+            if (!backendUrl) {
+                console.log('ℹ️ No backend URL for batch send');
+                return;
+            }
+            
+            if (this.events.length === 0) {
+                console.log('ℹ️ No events to send');
+                return;
+            }
+
+            // 获取未发送的事件
+            const unsent = this.events.filter(event => !event.sent);
+            console.log('📊 Unsent events:', unsent.length);
+            
+            if (unsent.length === 0) {
+                console.log('ℹ️ All events already sent');
+                return;
+            }
+
+            // 批量发送 (最多50个)
+            const batch = unsent.slice(0, 50);
+            const events = batch.map(event => ({
+                type: event.event,
+                data: this.formatEventForBackend(event)
+            }));
+
+            console.log('📤 Sending batch:', {
+                batchSize: batch.length,
+                url: `${backendUrl}/events/batch`
+            });
+
+            const response = await fetch(`${backendUrl}/events/batch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    source: 'TextDiffPlus',
-                    data: data
-                })
+                body: JSON.stringify({ events })
             });
-        } catch (error) {
-            // 静默处理错误，不影响用户体验
-            console.log('Analytics data queued locally');
-        }
 
-        // 方案2: 本地存储统计数据
-        this.saveToLocalStorage(data);
+            if (response.ok) {
+                // 标记为已发送
+                batch.forEach(event => {
+                    event.sent = true;
+                });
+                console.log(`✅ Batch sent successfully: ${batch.length} events`);
+            } else {
+                console.log(`❌ Batch send failed: HTTP ${response.status}`);
+            }
+
+        } catch (error) {
+            console.log('❌ Batch send error:', error.message);
+        }
     }
 
     /**
@@ -268,6 +476,60 @@ class TextDiffAnalytics {
     }
 
     /**
+     * 启动批量发送定时器
+     */
+    startBatchTimer() {
+        if (this.batchTimer) {
+            clearInterval(this.batchTimer);
+        }
+        
+        this.batchTimer = setInterval(() => {
+            this.sendBatchToBackend();
+        }, this.batchInterval);
+    }
+
+    /**
+     * 停止批量发送定时器
+     */
+    stopBatchTimer() {
+        if (this.batchTimer) {
+            clearInterval(this.batchTimer);
+            this.batchTimer = null;
+        }
+    }
+
+    /**
+     * 配置后台分析服务
+     */
+    configureBackend(config) {
+        window.ANALYTICS_CONFIG = {
+            backendUrl: config.backendUrl,
+            batchInterval: config.batchInterval || 30000,
+            enabled: config.enabled !== false
+        };
+        
+        if (config.batchInterval) {
+            this.batchInterval = config.batchInterval;
+            this.startBatchTimer();
+        }
+        
+        console.log('📊 Analytics backend configured:', config);
+    }
+
+    /**
+     * 显示管理员工具 (仅开发环境)
+     */
+    showAdminToolsIfDev() {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            const adminTools = document.getElementById('adminTools');
+            if (adminTools) {
+                adminTools.style.display = 'block';
+            }
+        }
+    }
+
+    /**
      * 获取统计摘要
      */
     getAnalyticsSummary() {
@@ -321,6 +583,13 @@ function showAnalyticsSummary() {
                 <p>总事件数: <strong>${summary.totalEvents}</strong></p>
                 <p>页面访问: <strong>${summary.pageViews}</strong></p>
                 <p>会话数: <strong>${summary.sessions}</strong></p>
+            </div>
+            
+            <div style="padding: 10px; background: white; border-radius: 4px;">
+                <h4>📊 数据状态</h4>
+                <p>本地存储: <strong style="color: green">${summary.totalEvents > 0 ? '有数据' : '无数据'}</strong></p>
+                <p>后台同步: <strong style="color: ${this.getBackendUrl() ? 'green' : 'orange'}">${this.getBackendUrl() ? '自动' : '仅本地'}</strong></p>
+                <p>数据保护: <strong style="color: green">已匿名化</strong></p>
             </div>
             
             <div style="padding: 10px; background: white; border-radius: 4px;">
@@ -380,4 +649,55 @@ function clearAnalyticsData() {
         document.getElementById('analyticsSummary').style.display = 'none';
         alert('统计数据已清除');
     }
+}
+
+function openAdminDashboard() {
+    // 打开管理员仪表板
+    const adminUrl = window.location.protocol + '//' + window.location.host + '/admin-dashboard.html';
+    window.open(adminUrl, '_blank');
+}
+
+function configureAnalyticsSystem() {
+    // 打开系统配置界面 (仅管理员)
+    if (window.configureAnalytics) {
+        window.configureAnalytics();
+    } else {
+        alert('配置系统未加载');
+    }
+}
+
+function testBackendConnection() {
+    if (!window.textDiffAnalytics) {
+        alert('统计系统未初始化');
+        return;
+    }
+    
+    const backendUrl = window.textDiffAnalytics.getBackendUrl();
+    if (!backendUrl) {
+        alert('请先配置后台服务URL');
+        return;
+    }
+    
+    // 发送测试事件
+    window.textDiffAnalytics.trackFeatureUsage('backend_test', {
+        action: 'connection_test',
+        timestamp: new Date().toISOString()
+    });
+    
+    alert('测试事件已发送，请检查后台日志');
+}
+
+function sendBatchNow() {
+    if (!window.textDiffAnalytics) {
+        alert('统计系统未初始化');
+        return;
+    }
+    
+    window.textDiffAnalytics.sendBatchToBackend()
+        .then(() => {
+            alert('批量数据发送完成');
+        })
+        .catch(error => {
+            alert('批量发送失败: ' + error.message);
+        });
 }

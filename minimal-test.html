@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head><title>Minimal Test</title></head>
+<body>
+    <h1>Minimal Analytics Test</h1>
+    <p id="status">Loading...</p>
+    
+    <script>
+        // 直接测试fetch到后台
+        async function testDirectFetch() {
+            try {
+                console.log('Testing direct fetch to backend...');
+                
+                const testData = {
+                    sessionId: 'minimal_test_' + Date.now(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('Sending data:', testData);
+                
+                const response = await fetch('http://localhost:3001/api/analytics/events/page-view', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Response data:', result);
+                    document.getElementById('status').innerHTML = '✅ Direct fetch successful: ' + result.message;
+                } else {
+                    document.getElementById('status').innerHTML = '❌ Direct fetch failed: HTTP ' + response.status;
+                }
+                
+            } catch (error) {
+                console.error('Direct fetch error:', error);
+                document.getElementById('status').innerHTML = '❌ Direct fetch error: ' + error.message;
+            }
+        }
+        
+        // 页面加载后测试
+        window.addEventListener('load', () => {
+            setTimeout(testDirectFetch, 1000);
+        });
+    </script>
+</body>
+</html>

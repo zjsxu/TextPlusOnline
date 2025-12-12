@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextDiff+ Analytics Dashboard - 系统管理员专用</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .header .warning {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .status-bar {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        }
+        
+        .status-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+        
+        .controls {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .controls h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4em;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: #212529;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .health-excellent { color: #28a745; }
+        .health-good { color: #ffc107; }
+        .health-warning { color: #fd7e14; }
+        .health-critical { color: #dc3545; }
+        
+        .events-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        .event-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            font-size: 0.9em;
+            border-left: 4px solid #667eea;
+        }
+        
+        .event-time {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .loading::before {
+            content: "⏳";
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #28a745;
+        }
+        
+        .info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        @media (max-width: 768px) {
+            .status-bar {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            background: white;
+            margin-top: 30px;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 TextDiff+ Analytics Dashboard</h1>
+        <p>系统管理员专用数据监控面板 | Admin-Only Data Monitoring Panel</p>
+        <div class="warning">
+            ⚠️ 此页面仅供系统管理员使用 | For System Administrators Only
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 实时状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value" id="onlineUsers">-</div>
+                <div class="status-label">在线用户 | Online Users</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="currentSessions">-</div>
+                <div class="status-label">活跃会话 | Active Sessions</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="eventsPerMinute">-</div>
+                <div class="status-label">每分钟事件 | Events/Min</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="systemHealth">-</div>
+                <div class="status-label">系统健康 | System Health</div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <h3>🎛️ 控制面板 | Control Panel</h3>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="refreshData()">
+                    🔄 刷新数据 | Refresh Data
+                </button>
+                <button class="btn btn-success" onclick="toggleAutoRefresh()">
+                    ⏱️ 自动刷新 | Auto Refresh
+                </button>
+                <button class="btn btn-info" onclick="exportData()">
+                    📥 导出数据 | Export Data
+                </button>
+                <button class="btn btn-warning" onclick="showSystemInfo()">
+                    ℹ️ 系统信息 | System Info
+                </button>
+            </div>
+            <div id="messages"></div>
+        </div>
+
+        <!-- 数据仪表板网格 -->
+        <div class="dashboard-grid">
+            <!-- 实时统计 -->
+            <div class="card">
+                <h3>📈 实时统计 | Real-time Statistics</h3>
+                <div id="realTimeStats" class="loading">正在加载数据... | Loading data...</div>
+            </div>
+
+            <!-- 功能使用排行 -->
+            <div class="card">
+                <h3>🎯 功能使用排行 | Feature Usage Ranking</h3>
+                <div id="featureUsage" class="loading">正在加载数据... | Loading data...</div>
+            </div>
+
+            <!-- 地理分布 -->
+            <div class="card">
+                <h3>🌍 地理分布 | Geographic Distribution</h3>
+                <div id="geographicData" class="loading">正在加载数据... | Loading data...</div>
+            </div>
+
+            <!-- 系统性能 -->
+            <div class="card">
+                <h3>⚡ 系统性能 | System Performance</h3>
+                <div id="performanceMetrics" class="loading">正在加载数据... | Loading data...</div>
+            </div>
+
+            <!-- 最近事件 -->
+            <div class="card">
+                <h3>📝 最近事件 | Recent Events</h3>
+                <div id="recentEvents" class="events-list loading">正在加载数据... | Loading data...</div>
+            </div>
+
+            <!-- 连接状态 -->
+            <div class="card">
+                <h3>🔗 连接状态 | Connection Status</h3>
+                <div id="connectionStatus" class="loading">检查连接中... | Checking connection...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>TextDiff+ Analytics Dashboard v1.0 | 专为系统管理员设计的数据监控工具</p>
+        <p>Built for System Administrators | Real-time User Behavior Analytics</p>
+    </div>
+
+    <script>
+        // 配置 - 自动检测环境
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3001' 
+            : null; // 生产环境暂不支持后台API
+        let autoRefreshInterval = null;
+        let isAutoRefresh = false;
+
+        // 工具函数
+        function showMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = type;
+            messageEl.innerHTML = `<strong>${type.toUpperCase()}:</strong> ${message}`;
+            messagesDiv.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        // API调用函数
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                throw error;
+            }
+        }
+
+        // 检查连接状态
+        async function checkConnection() {
+            try {
+                const data = await fetchData('/health');
+                document.getElementById('connectionStatus').innerHTML = `
+                    <div class="metric-item">
+                        <span class="metric-label">🟢 服务状态 | Service Status</span>
+                        <span class="metric-value health-excellent">${data.status}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">⏰ 运行时间 | Uptime</span>
+                        <span class="metric-value">${Math.floor(data.uptime / 60)} 分钟</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">🏷️ 版本 | Version</span>
+                        <span class="metric-value">${data.version}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">🕐 最后更新 | Last Update</span>
+                        <span class="metric-value">${formatTime(data.timestamp)}</span>
+                    </div>
+                `;
+                return true;
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = `
+                    <div class="error">
+                        ❌ 连接失败 | Connection Failed<br>
+                        <strong>错误:</strong> ${error.message}<br>
+                        <small>请确保后台服务正在运行在 ${API_BASE_URL}</small>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // 加载实时统计
+        async function loadRealTimeStats() {
+            try {
+                const response = await fetchData('/api/analytics/real-time');
+                const data = response.data || response;
+
+                // 更新状态栏
+                document.getElementById('onlineUsers').textContent = data.onlineUsers || 0;
+                document.getElementById('currentSessions').textContent = data.currentSessions || 0;
+                document.getElementById('eventsPerMinute').textContent = data.eventsPerMinute?.current || 0;
+                
+                // 系统健康状态
+                const health = data.systemHealth || {};
+                const healthEl = document.getElementById('systemHealth');
+                healthEl.textContent = health.score || 0;
+                healthEl.className = `status-value health-${health.status || 'unknown'}`;
+
+                // 实时统计详情
+                document.getElementById('realTimeStats').innerHTML = `
+                    <div class="metric-item">
+                        <span class="metric-label">👥 在线用户数 | Online Users</span>
+                        <span class="metric-value">${formatNumber(data.onlineUsers || 0)}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">🔄 当前会话数 | Current Sessions</span>
+                        <span class="metric-value">${formatNumber(data.currentSessions || 0)}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">📊 每分钟事件 | Events per Minute</span>
+                        <span class="metric-value">${formatNumber(data.eventsPerMinute?.current || 0)}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">⚡ 平均响应时间 | Avg Response Time</span>
+                        <span class="metric-value">${health.avgResponseTime || 0}ms</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">❌ 错误率 | Error Rate</span>
+                        <span class="metric-value">${health.errorRate || 0}%</span>
+                    </div>
+                `;
+
+                // 功能使用统计
+                const featureUsage = data.featureUsage || {};
+                const featureHtml = Object.keys(featureUsage).length > 0 
+                    ? Object.entries(featureUsage)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 8)
+                        .map(([feature, count]) => {
+                            const featureName = {
+                                'file_upload': '📁 文件上传',
+                                'text_comparison': '🔍 文本对比',
+                                'dictionary_usage': '📚 词典管理',
+                                'theme_change': '🎨 主题切换',
+                                'frequency_analysis': '📈 词频分析',
+                                'user_activity': '👤 用户活动',
+                                'diagnostic_test': '🔧 诊断测试',
+                                'backend_test': '🧪 后台测试'
+                            }[feature] || `🔹 ${feature}`;
+                            
+                            return `
+                                <div class="metric-item">
+                                    <span class="metric-label">${featureName}</span>
+                                    <span class="metric-value">${formatNumber(count)}</span>
+                                </div>
+                            `;
+                        }).join('')
+                    : '<div class="metric-item"><span class="metric-label">📭 暂无功能使用数据 | No Feature Usage Data</span></div>';
+                
+                document.getElementById('featureUsage').innerHTML = featureHtml;
+
+                // 地理分布
+                const geoData = data.geographicDistribution || {};
+                const geoHtml = Object.keys(geoData).length > 0
+                    ? Object.entries(geoData)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 8)
+                        .map(([country, count]) => `
+                            <div class="metric-item">
+                                <span class="metric-label">🌍 ${country}</span>
+                                <span class="metric-value">${formatNumber(count)}</span>
+                            </div>
+                        `).join('')
+                    : '<div class="metric-item"><span class="metric-label">🌐 暂无地理分布数据 | No Geographic Data</span></div>';
+                
+                document.getElementById('geographicData').innerHTML = geoHtml;
+
+                // 系统性能
+                document.getElementById('performanceMetrics').innerHTML = `
+                    <div class="metric-item">
+                        <span class="metric-label">💯 健康评分 | Health Score</span>
+                        <span class="metric-value health-${health.status || 'unknown'}">${health.score || 0}/100</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">⚡ 平均响应时间 | Avg Response Time</span>
+                        <span class="metric-value">${health.avgResponseTime || 0}ms</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">❌ 错误率 | Error Rate</span>
+                        <span class="metric-value">${health.errorRate || 0}%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">🔄 系统状态 | System Status</span>
+                        <span class="metric-value health-${health.status || 'unknown'}">${health.status || 'unknown'}</span>
+                    </div>
+                `;
+
+                // 最近事件
+                const events = data.recentEvents || [];
+                const eventsHtml = events.length > 0
+                    ? events.slice(0, 15).map(event => {
+                        const eventType = {
+                            'page_view': '👁️ 页面访问',
+                            'feature_usage': '🎯 功能使用',
+                            'session': '👤 会话事件',
+                            'session_end': '👋 会话结束'
+                        }[event.type || event.event] || `📝 ${event.type || event.event || 'Unknown'}`;
+                        
+                        return `
+                            <div class="event-item">
+                                <strong>${eventType}</strong>
+                                ${event.feature ? ` - ${event.feature}` : ''}
+                                ${event.url ? ` - ${event.url}` : ''}
+                                ${event.sessionId ? ` (${event.sessionId.substring(0, 8)}...)` : ''}
+                                <div class="event-time">🕐 ${formatTime(event.timestamp)}</div>
+                            </div>
+                        `;
+                    }).join('')
+                    : '<div class="event-item">📭 暂无最近事件 | No Recent Events</div>';
+                
+                document.getElementById('recentEvents').innerHTML = eventsHtml;
+
+            } catch (error) {
+                showMessage('加载实时数据失败: ' + error.message, 'error');
+                console.error('Error loading real-time stats:', error);
+                
+                // 显示错误状态
+                ['realTimeStats', 'featureUsage', 'geographicData', 'performanceMetrics', 'recentEvents'].forEach(id => {
+                    document.getElementById(id).innerHTML = `
+                        <div class="error">
+                            ❌ 数据加载失败<br>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // 刷新数据
+        async function refreshData() {
+            showMessage('正在刷新数据... | Refreshing data...', 'info');
+            
+            try {
+                await Promise.all([
+                    checkConnection(),
+                    loadRealTimeStats()
+                ]);
+                
+                showMessage('数据刷新完成 | Data refreshed successfully', 'success');
+            } catch (error) {
+                showMessage('数据刷新失败: ' + error.message, 'error');
+            }
+        }
+
+        // 切换自动刷新
+        function toggleAutoRefresh() {
+            if (isAutoRefresh) {
+                clearInterval(autoRefreshInterval);
+                isAutoRefresh = false;
+                showMessage('自动刷新已停止 | Auto refresh stopped', 'info');
+            } else {
+                autoRefreshInterval = setInterval(refreshData, 30000); // 30秒刷新一次
+                isAutoRefresh = true;
+                showMessage('自动刷新已启动 (30秒间隔) | Auto refresh started (30s interval)', 'success');
+            }
+        }
+
+        // 导出数据
+        async function exportData() {
+            try {
+                showMessage('正在导出数据... | Exporting data...', 'info');
+                const data = await fetchData('/api/analytics/real-time');
+                
+                const exportData = {
+                    exportTime: new Date().toISOString(),
+                    systemInfo: {
+                        version: '1.0.0',
+                        environment: 'development'
+                    },
+                    analytics: data
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `textdiff_analytics_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showMessage('数据导出成功 | Data exported successfully', 'success');
+            } catch (error) {
+                showMessage('数据导出失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示系统信息
+        function showSystemInfo() {
+            const info = `
+                系统信息 | System Information:
+                - 后台API地址: ${API_BASE_URL}
+                - 自动刷新状态: ${isAutoRefresh ? '启用' : '禁用'}
+                - 页面加载时间: ${new Date().toLocaleString('zh-CN')}
+                - 用户代理: ${navigator.userAgent.substring(0, 50)}...
+                - 屏幕分辨率: ${screen.width}x${screen.height}
+            `;
+            alert(info);
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', async () => {
+            // 检查是否在生产环境
+            if (!API_BASE_URL) {
+                showMessage('⚠️ 生产环境模式：管理员面板仅在开发环境可用 | Production Mode: Admin panel only available in development', 'error');
+                document.querySelector('.container').innerHTML = `
+                    <div class="error" style="text-align: center; padding: 50px;">
+                        <h2>🚫 生产环境限制 | Production Environment Restriction</h2>
+                        <p>管理员仪表板仅在开发环境 (localhost) 可用。</p>
+                        <p>Admin dashboard is only available in development environment (localhost).</p>
+                        <br>
+                        <p><strong>如需访问管理功能，请在本地环境运行：</strong></p>
+                        <p><strong>To access admin features, please run in local environment:</strong></p>
+                        <code>./start-analytics.sh</code>
+                    </div>
+                `;
+                return;
+            }
+            
+            showMessage('管理员仪表板初始化中... | Initializing admin dashboard...', 'info');
+            
+            // 初始加载
+            await refreshData();
+            
+            // 启动自动刷新
+            toggleAutoRefresh();
+            
+            showMessage('管理员仪表板加载完成 | Admin dashboard loaded successfully', 'success');
+        });
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        refreshData();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
