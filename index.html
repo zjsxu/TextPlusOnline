@@ -259,6 +259,21 @@
     <section id="analyticsPanel" style="margin-top:40px; padding:20px; border:1px solid #ccc; border-radius:8px;">
         <h2>📊 网站使用统计 | Website Usage Analytics</h2>
         <p>查看本地使用统计数据（数据仅存储在您的浏览器中，不会上传到服务器）。</p>
+        
+        <!-- 实时用户统计显示 -->
+        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 15px 0; text-align: center;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">🌐 实时统计 | Real-time Stats</h4>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                <div style="margin: 5px;">
+                    <strong style="font-size: 1.5em; color: #007bff;" class="user-count">0</strong>
+                    <div style="font-size: 0.9em; color: #666;">当前在线 | Online Now</div>
+                </div>
+                <div style="margin: 5px;">
+                    <strong style="font-size: 1.5em; color: #28a745;" class="visit-count">0</strong>
+                    <div style="font-size: 0.9em; color: #666;">总访问量 | Total Visits</div>
+                </div>
+            </div>
+        </div>
 
         <div style="margin-top:15px;">
             <button onclick="showAnalyticsSummary()">显示统计摘要 | Show Analytics Summary</button>
@@ -282,6 +297,7 @@
 
     <!-- 应用脚本 -->
     <script src="analytics-config.js"></script>
+    <script src="user-counter.js"></script>
     <script src="js/analytics.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/diff_core.js"></script>

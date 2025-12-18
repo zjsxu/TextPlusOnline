@@ -256,19 +256,36 @@ class TextDiffAnalytics {
     getBackendUrl() {
         // 自动检测环境并配置后台URL
         const hostname = window.location.hostname;
+        const config = window.ANALYTICS_CONFIG || {};
         
         // 本地开发环境
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001/api/analytics';
+            return config.developmentBackendUrl || 'http://localhost:3001/api/analytics';
         }
         
-        // GitHub Pages 生产环境
+        // GitHub Pages 生产环境 - 使用真实的云端后台
         if (hostname === 'zjsxu.github.io') {
-            // 生产环境暂时使用本地存储模式，等待后台服务部署
-            return null; // 仅使用本地存储，不发送到后台
+            if (config.productionBackendUrl && config.enableProductionSend) {
+                console.log('📊 Using production cloud backend:', config.productionBackendUrl);
+                return config.productionBackendUrl;
+            }
+            
+            // 如果主后台不可用，尝试备用后台
+            if (config.fallbackBackendUrl) {
+                console.log('📊 Using fallback backend:', config.fallbackBackendUrl);
+                return config.fallbackBackendUrl;
+            }
+            
+            console.log('⚠️ No backend configured, using local storage only');
+            return null;
         }
         
-        // 其他环境暂不支持后台分析
+        // 其他环境也尝试使用生产后台 (支持自定义域名)
+        if (config.productionBackendUrl && config.enableProductionSend) {
+            console.log('📊 Using production backend for custom domain:', config.productionBackendUrl);
+            return config.productionBackendUrl;
+        }
+        
         return null;
     }
 
@@ -279,6 +296,12 @@ class TextDiffAnalytics {
         const endpoint = this.getEventEndpoint(data.event);
         const url = `${backendUrl}${endpoint}`;
         
+        console.log('📤 Sending to backend:', {
+            url: url,
+            event: data.event,
+            sessionId: data.sessionId
+        });
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -288,12 +311,43 @@ class TextDiffAnalytics {
         });
 
         if (!response.ok) {
-            throw new Error(`Backend request failed: ${response.status}`);
+            throw new Error(`Backend request failed: ${response.status} ${response.statusText}`);
         }
 
         const result = await response.json();
-        console.log('📊 Analytics sent to backend:', result);
+        console.log('✅ Analytics sent to backend successfully:', result);
         return result;
+    }
+
+    /**
+     * 发送到测试端点 (用于验证数据发送)
+     */
+    async sendToTestEndpoint(data, testUrl) {
+        const payload = {
+            timestamp: new Date().toISOString(),
+            event: data.event,
+            sessionId: data.sessionId,
+            feature: data.feature,
+            url: window.location.href,
+            userAgent: navigator.userAgent.substring(0, 100), // 截取前100字符
+            language: navigator.language,
+            screenResolution: `${screen.width}x${screen.height}`
+        };
+
+        const response = await fetch(testUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Test endpoint request failed: ${response.status}`);
+        }
+
+        console.log('📊 Analytics sent to test endpoint - data verified');
+        return { success: true, message: 'Data sent to test endpoint' };
     }
 
     /**
@@ -555,6 +609,29 @@ class TextDiffAnalytics {
     }
 }
 
+// 全局配置检查
+if (!window.ANALYTICS_CONFIG) {
+    window.ANALYTICS_CONFIG = {
+        // 生产环境后台API地址 (真实的云端API)
+        productionBackendUrl: 'https://textdiff-analytics-production.up.railway.app/api/analytics',
+        
+        // 开发环境配置
+        developmentBackendUrl: 'http://localhost:3001/api/analytics',
+        
+        // 批量发送间隔
+        batchInterval: 30000,
+        
+        // 是否启用调试日志
+        enableDebugLogs: true,
+        
+        // 是否启用生产环境数据发送
+        enableProductionSend: true,
+        
+        // 备用后台服务地址 (如果主服务不可用)
+        fallbackBackendUrl: 'https://textdiff-analytics.onrender.com/api/analytics'
+    };
+}
+
 // 全局统计实例
 window.textDiffAnalytics = new TextDiffAnalytics();
 
@@ -588,7 +665,7 @@ function showAnalyticsSummary() {
             <div style="padding: 10px; background: white; border-radius: 4px;">
                 <h4>📊 数据状态</h4>
                 <p>本地存储: <strong style="color: green">${summary.totalEvents > 0 ? '有数据' : '无数据'}</strong></p>
-                <p>后台同步: <strong style="color: ${this.getBackendUrl() ? 'green' : 'orange'}">${this.getBackendUrl() ? '自动' : '仅本地'}</strong></p>
+                <p>后台同步: <strong style="color: ${window.textDiffAnalytics.getBackendUrl() ? 'green' : 'orange'}">${window.textDiffAnalytics.getBackendUrl() ? '自动' : '仅本地'}</strong></p>
                 <p>数据保护: <strong style="color: green">已匿名化</strong></p>
             </div>
             

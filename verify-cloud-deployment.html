@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端后台部署验证 | Cloud Backend Deployment Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 云端后台部署验证</h1>
+        <p>Cloud Backend Deployment Verification</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 1. 后台服务健康检查 | Backend Health Check</h3>
+        <button class="btn" onclick="testHealth()">检查健康状态 | Check Health</button>
+        <div id="healthResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 2. 数据发送测试 | Data Sending Test</h3>
+        <button class="btn" onclick="testPageView()">测试页面访问 | Test Page View</button>
+        <button class="btn" onclick="testFeatureUsage()">测试功能使用 | Test Feature Usage</button>
+        <div id="sendResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📈 3. 实时数据查询 | Real-time Data Query</h3>
+        <button class="btn" onclick="testRealTimeData()">查询实时统计 | Query Real-time Stats</button>
+        <div id="queryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🎯 4. 完整流程测试 | Complete Flow Test</h3>
+        <button class="btn" onclick="testCompleteFlow()">运行完整测试 | Run Complete Test</button>
+        <div id="flowResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>⚙️ 5. 配置信息 | Configuration Info</h3>
+        <div id="configInfo"></div>
+    </div>
+
+    <script>
+        // 配置
+        const BACKEND_URLS = {
+            railway: 'https://textdiff-analytics-production.up.railway.app',
+            render: 'https://textdiff-analytics.onrender.com',
+            local: 'http://localhost:3001'
+        };
+
+        let currentBackend = BACKEND_URLS.railway;
+
+        // 显示配置信息
+        function showConfigInfo() {
+            const info = `
+当前环境: ${window.location.hostname}
+当前后台: ${currentBackend}
+用户代理: ${navigator.userAgent.substring(0, 80)}...
+时间戳: ${new Date().toISOString()}
+
+Available Backends:
+- Railway: ${BACKEND_URLS.railway}
+- Render: ${BACKEND_URLS.render}
+- Local: ${BACKEND_URLS.local}
+            `;
+            document.getElementById('configInfo').innerHTML = `<div class="info">${info}</div>`;
+        }
+
+        // 工具函数
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function showLoading(elementId, message) {
+            showResult(elementId, `⏳ ${message}`, 'loading');
+        }
+
+        // 1. 健康检查
+        async function testHealth() {
+            showLoading('healthResult', '正在检查后台服务健康状态...');
+            
+            try {
+                const response = await fetch(`${currentBackend}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const result = `
+✅ 后台服务运行正常！
+
+服务状态: ${data.status}
+版本: ${data.version}
+运行时间: ${Math.floor(data.uptime / 60)} 分钟
+环境: ${data.environment}
+时间戳: ${new Date(data.timestamp).toLocaleString('zh-CN')}
+                    `;
+                    showResult('healthResult', result, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                const result = `
+❌ 后台服务连接失败！
+
+错误信息: ${error.message}
+后台地址: ${currentBackend}
+建议: 请检查后台服务是否已正确部署
+                `;
+                showResult('healthResult', result, 'error');
+            }
+        }
+
+        // 2. 页面访问测试
+        async function testPageView() {
+            showLoading('sendResult', '正在测试页面访问数据发送...');
+            
+            try {
+                const testData = {
+                    sessionId: `test_${Date.now()}`,
+                    url: window.location.href,
+                    referrer: document.referrer || '',
+                    userAgent: navigator.userAgent,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    timestamp: new Date().toISOString()
+                };
+
+                const response = await fetch(`${currentBackend}/api/analytics/events/page-view`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const message = `
+✅ 页面访问数据发送成功！
+
+会话ID: ${testData.sessionId}
+响应: ${JSON.stringify(result, null, 2)}
+                    `;
+                    showResult('sendResult', message, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                const message = `
+❌ 页面访问数据发送失败！
+
+错误: ${error.message}
+                `;
+                showResult('sendResult', message, 'error');
+            }
+        }
+
+        // 3. 功能使用测试
+        async function testFeatureUsage() {
+            showLoading('sendResult', '正在测试功能使用数据发送...');
+            
+            try {
+                const testData = {
+                    sessionId: `test_${Date.now()}`,
+                    feature: 'deployment_test',
+                    action: 'verification',
+                    parameters: {
+                        testType: 'feature_usage',
+                        timestamp: new Date().toISOString()
+                    },
+                    duration: 0,
+                    timestamp: new Date().toISOString()
+                };
+
+                const response = await fetch(`${currentBackend}/api/analytics/events/feature-usage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const message = `
+✅ 功能使用数据发送成功！
+
+功能: ${testData.feature}
+动作: ${testData.action}
+响应: ${JSON.stringify(result, null, 2)}
+                    `;
+                    showResult('sendResult', message, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                const message = `
+❌ 功能使用数据发送失败！
+
+错误: ${error.message}
+                `;
+                showResult('sendResult', message, 'error');
+            }
+        }
+
+        // 4. 实时数据查询
+        async function testRealTimeData() {
+            showLoading('queryResult', '正在查询实时统计数据...');
+            
+            try {
+                const response = await fetch(`${currentBackend}/api/analytics/real-time`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const stats = data.data || data;
+                    const message = `
+✅ 实时数据查询成功！
+
+在线用户: ${stats.onlineUsers || 0}
+当前会话: ${stats.currentSessions || 0}
+每分钟事件: ${stats.eventsPerMinute?.current || 0}
+总事件数: ${stats.totalEvents || 0}
+系统健康: ${stats.systemHealth?.status || 'unknown'} (${stats.systemHealth?.score || 0}/100)
+
+最近事件数量: ${stats.recentEvents?.length || 0}
+功能使用统计: ${Object.keys(stats.featureUsage || {}).length} 种功能
+地理分布: ${Object.keys(stats.geographicDistribution || {}).length} 个地区
+                    `;
+                    showResult('queryResult', message, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                const message = `
+❌ 实时数据查询失败！
+
+错误: ${error.message}
+                `;
+                showResult('queryResult', message, 'error');
+            }
+        }
+
+        // 5. 完整流程测试
+        async function testCompleteFlow() {
+            showLoading('flowResult', '正在运行完整流程测试...');
+            
+            const results = [];
+            
+            try {
+                // 步骤1: 健康检查
+                results.push('🔍 步骤1: 健康检查...');
+                const healthResponse = await fetch(`${currentBackend}/health`);
+                if (!healthResponse.ok) throw new Error('健康检查失败');
+                results.push('✅ 健康检查通过');
+
+                // 步骤2: 发送页面访问
+                results.push('📊 步骤2: 发送页面访问数据...');
+                const sessionId = `flow_test_${Date.now()}`;
+                const pageViewResponse = await fetch(`${currentBackend}/api/analytics/events/page-view`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        url: window.location.href,
+                        userAgent: navigator.userAgent,
+                        language: navigator.language,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                if (!pageViewResponse.ok) throw new Error('页面访问数据发送失败');
+                results.push('✅ 页面访问数据发送成功');
+
+                // 步骤3: 发送功能使用
+                results.push('🎯 步骤3: 发送功能使用数据...');
+                const featureResponse = await fetch(`${currentBackend}/api/analytics/events/feature-usage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        feature: 'complete_flow_test',
+                        action: 'verification',
+                        parameters: { testType: 'complete_flow' },
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                if (!featureResponse.ok) throw new Error('功能使用数据发送失败');
+                results.push('✅ 功能使用数据发送成功');
+
+                // 步骤4: 查询实时数据
+                results.push('📈 步骤4: 查询实时统计...');
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒让数据处理
+                const statsResponse = await fetch(`${currentBackend}/api/analytics/real-time`);
+                if (!statsResponse.ok) throw new Error('实时数据查询失败');
+                const statsData = await statsResponse.json();
+                results.push('✅ 实时数据查询成功');
+
+                // 完成
+                results.push('');
+                results.push('🎉 完整流程测试成功！');
+                results.push(`会话ID: ${sessionId}`);
+                results.push(`总事件数: ${(statsData.data || statsData).totalEvents || 0}`);
+                results.push('');
+                results.push('✅ 后台监控系统已正常工作！');
+                results.push('✅ GitHub Pages用户数据将被正确收集！');
+
+                showResult('flowResult', results.join('\n'), 'success');
+
+            } catch (error) {
+                results.push('');
+                results.push(`❌ 测试失败: ${error.message}`);
+                results.push('');
+                results.push('请检查:');
+                results.push('1. 后台服务是否正确部署');
+                results.push('2. 网络连接是否正常');
+                results.push('3. CORS配置是否正确');
+                
+                showResult('flowResult', results.join('\n'), 'error');
+            }
+        }
+
+        // 页面加载时显示配置信息
+        window.addEventListener('load', () => {
+            showConfigInfo();
+        });
+    </script>
+</body>
+</html>

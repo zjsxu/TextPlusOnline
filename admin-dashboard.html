@@ -388,7 +388,7 @@
         // 配置 - 自动检测环境
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:3001' 
-            : null; // 生产环境暂不支持后台API
+            : 'https://textdiff-analytics-production.up.railway.app'; // 生产环境云端API
         let autoRefreshInterval = null;
         let isAutoRefresh = false;
 
@@ -692,24 +692,10 @@
 
         // 页面加载完成后初始化
         window.addEventListener('load', async () => {
-            // 检查是否在生产环境
-            if (!API_BASE_URL) {
-                showMessage('⚠️ 生产环境模式：管理员面板仅在开发环境可用 | Production Mode: Admin panel only available in development', 'error');
-                document.querySelector('.container').innerHTML = `
-                    <div class="error" style="text-align: center; padding: 50px;">
-                        <h2>🚫 生产环境限制 | Production Environment Restriction</h2>
-                        <p>管理员仪表板仅在开发环境 (localhost) 可用。</p>
-                        <p>Admin dashboard is only available in development environment (localhost).</p>
-                        <br>
-                        <p><strong>如需访问管理功能，请在本地环境运行：</strong></p>
-                        <p><strong>To access admin features, please run in local environment:</strong></p>
-                        <code>./start-analytics.sh</code>
-                    </div>
-                `;
-                return;
-            }
-            
             showMessage('管理员仪表板初始化中... | Initializing admin dashboard...', 'info');
+            
+            // 显示当前连接的后台
+            showMessage(`连接到后台: ${API_BASE_URL} | Connecting to backend: ${API_BASE_URL}`, 'info');
             
             // 初始加载
             await refreshData();

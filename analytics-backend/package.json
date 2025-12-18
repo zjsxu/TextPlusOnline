@@ -1,56 +1,24 @@
 {
   "name": "textdiff-analytics-backend",
   "version": "1.0.0",
-  "description": "TextDiff+ Analytics Backend System",
-  "main": "src/app.js",
+  "description": "TextDiff+ Analytics Backend Service",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:backend": "node test-backend.js",
-    "docker:build": "docker build -t textdiff-analytics .",
-    "docker:run": "docker-compose up -d",
-    "db:init": "node -e \"console.log('Database initialization - check DEPLOYMENT.md for setup instructions')\""
+    "start": "node server.js",
+    "dev": "node test-simple.js",
+    "test": "node test-backend.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "compression": "^1.7.4",
-    "morgan": "^1.10.0",
-    "dotenv": "^16.3.1",
-    "redis": "^4.6.10",
-    "pg": "^8.11.3",
-    "@influxdata/influxdb-client": "^1.33.2",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "joi": "^17.11.0",
-    "winston": "^3.11.0",
-    "socket.io": "^4.7.4",
-    "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.7",
-    "axios": "^1.6.2",
-    "node-fetch": "^2.7.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "@types/jest": "^29.5.8",
-    "eslint": "^8.54.0",
-    "prettier": "^3.1.0"
+    "morgan": "^1.10.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   },
-  "keywords": [
-    "analytics",
-    "dashboard",
-    "textdiff",
-    "monitoring",
-    "real-time"
-  ],
+  "keywords": ["analytics", "textdiff", "monitoring"],
   "author": "TextDiff+ Team",
   "license": "MIT"
 }
